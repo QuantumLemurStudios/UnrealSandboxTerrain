@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class UnrealSandboxTerrain : ModuleRules
 {
-	public UnrealSandboxTerrain(TargetInfo Target)
+	public UnrealSandboxTerrain(ReadOnlyTargetRules Target) : base(Target)
 	{
 		
 		PublicIncludePaths.AddRange(
