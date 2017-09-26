@@ -8,9 +8,10 @@
 #include "DrawDebugHelpers.h"
 #include "Async.h"
 #include "Json.h"
+#include "Engine/EngineTypes.h"
 
 #include "SandboxTerrainMeshComponent.h"
-
+#include "../Public/SandboxTerrainController.h"
 
 class FAsyncThread : public FRunnable {
 
@@ -74,6 +75,7 @@ public:
 	}
 };
 
+static const FAttachmentTransformRules defaultAttachmentRule(EAttachmentRule::KeepRelative, false);
 
 ASandboxTerrainController::ASandboxTerrainController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	PrimaryActorTick.bCanEverTick = true;
@@ -84,7 +86,7 @@ ASandboxTerrainController::ASandboxTerrainController(const FObjectInitializer& O
 	bEnableLOD = false;
 
 	TerrainGeneratorComponent = CreateDefaultSubobject<UTerrainGeneratorComponent>(TEXT("TerrainGenerator"));
-	TerrainGeneratorComponent->AttachTo(RootComponent);
+	TerrainGeneratorComponent->AttachToComponent(RootComponent, defaultAttachmentRule);
 }
 
 ASandboxTerrainController::ASandboxTerrainController() {
@@ -96,7 +98,7 @@ ASandboxTerrainController::ASandboxTerrainController() {
 	bEnableLOD = false;
 
 	TerrainGeneratorComponent = CreateDefaultSubobject<UTerrainGeneratorComponent>(TEXT("TerrainGenerator"));
-	TerrainGeneratorComponent->AttachTo(RootComponent);
+	TerrainGeneratorComponent->AttachToComponent(RootComponent, defaultAttachmentRule);
 }
 
 void ASandboxTerrainController::PostLoad() {
@@ -561,7 +563,7 @@ UTerrainRegionComponent* ASandboxTerrainController::GetOrCreateRegion(FVector po
 		FString RegionName = FString::Printf(TEXT("Region -> [%.0f, %.0f, %.0f]"), RegionIndex.X, RegionIndex.Y, RegionIndex.Z);
 		RegionComponent = NewObject<UTerrainRegionComponent>(this, FName(*RegionName));
 		RegionComponent->RegisterComponent();
-		RegionComponent->AttachTo(RootComponent);
+		RegionComponent->AttachToComponent(RootComponent, defaultAttachmentRule);
 		//RegionComponent->SetRelativeLocation(pos);
 		RegionComponent->SetWorldLocation(GetRegionPos(RegionIndex));
 
@@ -583,14 +585,14 @@ UTerrainZoneComponent* ASandboxTerrainController::AddTerrainZone(FVector pos) {
 	if (ZoneComponent) {
 		ZoneComponent->RegisterComponent();
 		//ZoneComponent->SetRelativeLocation(pos);
-		ZoneComponent->AttachTo(RegionComponent);
+		ZoneComponent->AttachToComponent(RegionComponent, defaultAttachmentRule);
 		ZoneComponent->SetWorldLocation(pos);
 
 		FString TerrainMeshCompName = FString::Printf(TEXT("TerrainMesh -> [%.0f, %.0f, %.0f]"), index.X, index.Y, index.Z);
 		USandboxTerrainMeshComponent* TerrainMeshComp = NewObject<USandboxTerrainMeshComponent>(this, FName(*TerrainMeshCompName));
 		TerrainMeshComp->RegisterComponent();
 		TerrainMeshComp->SetMobility(EComponentMobility::Stationary);
-		TerrainMeshComp->AttachTo(ZoneComponent);
+		TerrainMeshComp->AttachToComponent(ZoneComponent, defaultAttachmentRule);
 
 		FString CollisionMeshCompName = FString::Printf(TEXT("CollisionMesh -> [%.0f, %.0f, %.0f]"), index.X, index.Y, index.Z);
 		USandboxTerrainCollisionComponent* CollisionMeshComp = NewObject<USandboxTerrainCollisionComponent>(this, FName(*CollisionMeshCompName));
@@ -598,7 +600,7 @@ UTerrainZoneComponent* ASandboxTerrainController::AddTerrainZone(FVector pos) {
 		CollisionMeshComp->SetMobility(EComponentMobility::Stationary);
 		CollisionMeshComp->SetCanEverAffectNavigation(true);
 		CollisionMeshComp->SetCollisionProfileName(TEXT("InvisibleWall"));
-		CollisionMeshComp->AttachTo(ZoneComponent);
+		CollisionMeshComp->AttachToComponent(ZoneComponent, defaultAttachmentRule);
 
 		ZoneComponent->MainTerrainMesh = TerrainMeshComp;
 		ZoneComponent->CollisionMesh = CollisionMeshComp;
