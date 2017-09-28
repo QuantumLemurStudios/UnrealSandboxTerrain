@@ -618,17 +618,26 @@ UTerrainZoneComponent* ASandboxTerrainController::AddTerrainZone(FVector pos) {
 //======================================================================================================================================================================
 
 template<class H>
-class FTerrainEditThread : public FRunnable {
-public:
-	H zone_handler;
+class FTerrainEditTask : public FNonAbandonableTask {
+    friend class FAutoDeleteAsyncTask<FTerrainEditTask<H>>;
+private:
+	H zoneHandler;
 	FVector origin;
 	float radius;
 	ASandboxTerrainController* instance;
-
-	virtual uint32 Run() {
-		instance->EditTerrain(origin, radius, zone_handler);
-		return 0;
+public:
+    FTerrainEditTask(H zoneHandler, FVector origin, float radius, ASandboxTerrainController* instance)
+            : zoneHandler(zoneHandler), radius(radius), instance(instance) {
+        this->origin = origin;
+    }
+protected:
+	void DoWork() {
+		instance->EditTerrain(origin, radius, zoneHandler);
 	}
+
+    FORCEINLINE TStatId GetStatId() const {
+        RETURN_QUICK_DECLARE_CYCLE_STAT(FTerrainEditTask, STATGROUP_ThreadPoolAsyncTasks);
+    }
 };
 
 struct TZoneEditHandler {
@@ -776,14 +785,10 @@ void ASandboxTerrainController::FillTerrainCube(FVector origin, const float r, c
 
 template<class H>
 void ASandboxTerrainController::PerformTerrainChange(FVector Origin, float Radius, H Handler) {
-	FTerrainEditThread<H>* EditThread = new FTerrainEditThread<H>();
-	EditThread->zone_handler = Handler;
-	EditThread->origin = Origin;
-	EditThread->radius = Radius;
-	EditThread->instance = this;
+    (new FAutoDeleteAsyncTask<FTerrainEditTask<H>>(Handler, Origin, Radius, this))->StartBackgroundTask();
 
-	FString ThreadName = FString::Printf(TEXT("terrain_change-thread-%d"), FPlatformTime::Seconds());
-	FRunnableThread* Thread = FRunnableThread::Create(EditThread, *ThreadName, true, true);
+	//FString ThreadName = FString::Printf(TEXT("terrain_change-thread-%d"), FPlatformTime::Seconds());
+	//FRunnableThread* Thread = FRunnableThread::Create(EditThread, *ThreadName, true, true);
 	//FIXME delete thread after finish
 
 	FVector TestPoint(Origin);

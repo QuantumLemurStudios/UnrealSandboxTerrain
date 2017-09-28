@@ -3,10 +3,6 @@
 #include "UnrealSandboxTerrainPrivatePCH.h"
 #include "TerrainZoneComponent.h"
 #include "TerrainRegionComponent.h"
-#include "SandboxTerrainController.h"
-#include "SandboxVoxeldata.h"
-
-#include "DrawDebugHelpers.h"
 
 UTerrainZoneComponent::UTerrainZoneComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	voxel_data = nullptr;
@@ -192,6 +188,8 @@ void UTerrainZoneComponent::SerializeInstancedMeshes(FBufferArchive& BinaryData)
 }
 
 void UTerrainZoneComponent::SpawnInstancedMesh(FTerrainInstancedMeshType& MeshType, FTransform& Transform) {
+	static const FAttachmentTransformRules defaultAttachmentRule(EAttachmentRule::KeepRelative, false);
+
 	UHierarchicalInstancedStaticMeshComponent* InstancedStaticMeshComponent = nullptr;
 
 	if (InstancedMeshMap.Contains(MeshType.MeshTypeId)) {
@@ -204,7 +202,7 @@ void UTerrainZoneComponent::SpawnInstancedMesh(FTerrainInstancedMeshType& MeshTy
 		InstancedStaticMeshComponent = NewObject<UHierarchicalInstancedStaticMeshComponent>(this, FName(*InstancedStaticMeshCompName));
 
 		InstancedStaticMeshComponent->RegisterComponent();
-		InstancedStaticMeshComponent->AttachTo(this);
+		InstancedStaticMeshComponent->AttachToComponent(this, defaultAttachmentRule);
 		InstancedStaticMeshComponent->SetStaticMesh(MeshType.Mesh);
 		InstancedStaticMeshComponent->SetCullDistances(MeshType.StartCullDistance, MeshType.EndCullDistance);
 		InstancedStaticMeshComponent->SetMobility(EComponentMobility::Static);

@@ -40,12 +40,12 @@ struct RegularCellData
 	unsigned char	geometryCounts;		// High nibble is vertex count, low nibble is triangle count.
 	unsigned char	vertexIndex[15];	// Groups of 3 indexes giving the triangulation.
 	
-	long GetVertexCount(void) const
+	long GetVertexCount() const
 	{
 		return (geometryCounts >> 4);
 	}
 	
-	long GetTriangleCount(void) const
+	long GetTriangleCount() const
 	{
 		return (geometryCounts & 0x0F);
 	}
@@ -61,12 +61,12 @@ struct TransitionCellData
 	long			geometryCounts;		// High nibble is vertex count, low nibble is triangle count.
 	unsigned char	vertexIndex[36];	// Groups of 3 indexes giving the triangulation.
 	
-	long GetVertexCount(void) const
+	long GetVertexCount() const
 	{
 		return (geometryCounts >> 4);
 	}
 	
-	long GetTriangleCount(void) const
+	long GetTriangleCount() const
 	{
 		return (geometryCounts & 0x0F);
 	}
